@@ -1,4 +1,4 @@
-#from twilio.rest import Client
+from twilio.rest import Client
 import imaplib
 import email
 from email.header import decode_header
@@ -10,7 +10,23 @@ load_dotenv()
 EMAIL_USER = 'ovitormora@gmail.com'
 EMAIL_SENHA = os.getenv('EMAIL_SENHA')
 IMAP_SERVIDOR = 'imap.gmail.com'
-REMETENTE_BUSCA = 'mmartins.vitor2@gmail.com'
+REMETENTE_BUSCA = 'contato@thenewscc.com.br'
+TWILIO_SID = os.getenv('TWILIO_SID')
+TWILIO_TOKEN = os.getenv('TWILIO_TOKEN')
+WHATSAPP_DESTINO = os.getenv('WHATSAPP_DESTINO')
+
+
+def enviar_whatsapp(mensagem):
+    try:
+        client = Client(TWILIO_SID, TWILIO_TOKEN)
+        message = client.messages.create(
+            body=mensagem,
+            from_='whatsapp:+14155238886',  # Número do sandbox Twilio
+            to=WHATSAPP_DESTINO
+        )
+        print(f'✅ Mensagem enviada com SID: {message.sid}')
+    except Exception as e:
+        print("❌ Erro ao enviar WhatsApp:", e)
 
 
 def conect_n_read_mail():
@@ -36,43 +52,24 @@ def conect_n_read_mail():
         raw_email = dados[0][-1]
         msg = email.message_from_bytes(raw_email)
 
+        corpo = None
         if msg.is_multipart():
             for parte in msg.walk():
-                tipo = parte.get_content_type()
-                if tipo == "text/plain":
-                    corpo = parte.get_payload(decode=True).decode()
-        else:
-            return msg.get_payload(decode=True).decode()
-        
-        '''
-        # Assunto
-        assunto, encoding = decode_header(msg["Subject"])[0]
-        if isinstance(assunto, bytes):
-            assunto = assunto.decode(encoding if encoding else "utf-8")
-
-        # remetente
-        remetente = msg.get("From")
-
-        # corpo do email
-        if msg.is_multipart():
-            for parte in msg.walk():
-                tipo = parte.get_content_type()
-                if tipo == "text/plain":
+                if parte.get_content_type() == "text/plain":
                     corpo = parte.get_payload(decode=True).decode()
                     break
-
         else:
             corpo = msg.get_payload(decode=True).decode()
 
-        # teste
-        print("✅ E-mail encontrado:")
-        print("Assunto:", assunto)
-        print("Remetente:", remetente)
-        print("\nConteúdo:\n", corpo[:500])  # imprime só os 500 primeiros caracteres
+        mail.logout()
 
-        mail.logout()
-'''
-        mail.logout()
+        if corpo:
+            print("✅ Conteúdo recebido do e-mail:")
+            print(corpo[:500])
+            enviar_whatsapp(corpo)
+        else:
+            print("⚠️ E-mail não tinha conteúdo 'text/plain'.")
+
     except Exception as e:
         print("Erro encontrado: ", e)
 

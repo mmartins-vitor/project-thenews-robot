@@ -1,0 +1,20 @@
+# Ambientes virtuais
+venv/
+.env
+
+# Arquivos de configuração sensíveis
+*.env
+config.py
+
+# Arquivos temporários
+*.pyc
+__pycache__/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
